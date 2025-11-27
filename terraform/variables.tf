@@ -81,6 +81,34 @@ variable "enable_parquet_conversion" {
 }
 
 # =========================================
+# REDSHIFT CONFIGURATION
+# =========================================
+
+variable "redshift_admin_username" {
+  description = "Redshift admin username"
+  type        = string
+  default     = "admin"
+}
+
+variable "redshift_admin_password" {
+  description = "Redshift admin password (min 8 chars, uppercase, lowercase, number)"
+  type        = string
+  sensitive   = true
+}
+
+variable "redshift_database_name" {
+  description = "Redshift database name"
+  type        = string
+  default     = "medical_db"
+}
+
+variable "redshift_base_capacity" {
+  description = "Redshift Serverless base capacity (32-512 RPU)"
+  type        = number
+  default     = 32
+}
+
+# =========================================
 # CLOUDWATCH ALARMS (OPTIONAL - Phase 2)
 # =========================================
 

@@ -29,9 +29,9 @@ resource "aws_iam_role_policy" "firehose_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid    = "KinesisRead"
-        Effect = "Allow"
-        Action = [
+        Sid      = "KinesisRead"
+        Effect   = "Allow"
+        Action   = [
           "kinesis:DescribeStream",
           "kinesis:GetRecords",
           "kinesis:GetShardIterator",
@@ -40,9 +40,9 @@ resource "aws_iam_role_policy" "firehose_policy" {
         Resource = aws_kinesis_stream.medical_stream.arn
       },
       {
-        Sid    = "S3Write"
-        Effect = "Allow"
-        Action = [
+        Sid      = "S3Write"
+        Effect   = "Allow"
+        Action   = [
           "s3:PutObject",
           "s3:GetBucketLocation",
           "s3:ListBucket"
@@ -53,9 +53,9 @@ resource "aws_iam_role_policy" "firehose_policy" {
         ]
       },
       {
-        Sid    = "CloudWatchLogs"
-        Effect = "Allow"
-        Action = [
+        Sid      = "CloudWatchLogs"
+        Effect   = "Allow"
+        Action   = [
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ]
@@ -82,23 +82,57 @@ resource "aws_iam_user" "kafka_kinesis_user" {
     Name = "Kafka Connect User"
   }
 }
-
 resource "aws_iam_user_policy" "kafka_kinesis_policy" {
   name = "${var.project_name}-kafka-policy"
   user = aws_iam_user.kafka_kinesis_user.name
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Sid    = "KinesisWrite"
-      Effect = "Allow"
-      Action = [
-        "kinesis:PutRecord",
-        "kinesis:PutRecords",
-        "kinesis:DescribeStream"
-      ]
-      Resource = aws_kinesis_stream.medical_stream.arn
-    }]
+    Statement = [
+      {
+        Sid      = "KinesisWrite"
+        Effect   = "Allow"
+        Action   = [
+          "kinesis:PutRecord",
+          "kinesis:PutRecords",
+          "kinesis:DescribeStream"
+        ]
+        Resource = aws_kinesis_stream.medical_stream.arn
+      },
+      {
+        Sid      = "EC2Management"
+        Effect   = "Allow"
+        Action   = [
+          "ec2:CreateSecurityGroup",
+          "ec2:AuthorizeSecurityGroupIngress",
+          "ec2:RevokeSecurityGroupIngress",
+          "ec2:DeleteSecurityGroup",
+          "ec2:DescribeSecurityGroups"
+        ]
+        Resource = "*"
+      },
+      {
+        Sid      = "PassRedshiftRole"
+        Effect   = "Allow"
+        Action   = "iam:PassRole"
+        Resource = aws_iam_role.redshift_s3_role.arn
+      },
+      
+      {
+        Sid      = "RedshiftServerlessOps"
+        Effect   = "Allow"
+        Action   = [
+          "redshift-serverless:CreateNamespace",
+          "redshift-serverless:DeleteNamespace",
+          "redshift-serverless:CreateWorkgroup",
+          "redshift-serverless:DeleteWorkgroup",
+          "redshift-serverless:Update*",
+          "redshift-serverless:Get*",
+          "redshift-serverless:List*"
+        ]
+        Resource = "*"
+      },
+    ]
   })
 }
 

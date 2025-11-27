@@ -73,6 +73,36 @@ output "glue_table_name" {
   value       = var.enable_parquet_conversion ? aws_glue_catalog_table.medical_vitals[0].name : "N/A (Parquet disabled)"
 }
 
+
+# =========================================
+# REDSHIFT OUTPUTS
+# =========================================
+
+output "redshift_endpoint" {
+  description = "Redshift Serverless Endpoint"
+  value       = aws_redshiftserverless_workgroup.medical_workgroup.endpoint[0].address
+}
+
+output "redshift_port" {
+  description = "Redshift Port"
+  value       = aws_redshiftserverless_workgroup.medical_workgroup.endpoint[0].port
+}
+
+output "redshift_database" {
+  description = "Redshift Database Name"
+  value       = var.redshift_database_name
+}
+
+output "redshift_username" {
+  description = "Redshift Admin Username"
+  value       = var.redshift_admin_username
+}
+
+output "redshift_iam_role_arn" {
+  description = "Redshift IAM Role ARN (for COPY command)"
+  value       = aws_iam_role.redshift_s3_role.arn
+}
+
 # =========================================
 # CONNECTION DETAILS FOR KAFKA CONNECT
 # =========================================
