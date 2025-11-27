@@ -6,7 +6,6 @@ services:
   # ========================================
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
-    hostname: zookeeper
     container_name: zookeeper
     ports:
       - "2181:2181"
@@ -15,13 +14,15 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     networks:
       - kafka-network
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper-log:/var/lib/zookeeper/log
 
   # ========================================
   # KAFKA BROKER
   # ========================================
   kafka:
     image: confluentinc/cp-kafka:7.5.0
-    hostname: kafka
     container_name: kafka
     depends_on:
       - zookeeper
@@ -31,23 +32,18 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      
-      # Listeners Configuration
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
-      
-      # Topic Configuration
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      
-      # Performance Tuning
       KAFKA_NUM_PARTITIONS: 3
       KAFKA_DEFAULT_REPLICATION_FACTOR: 1
-      KAFKA_LOG_RETENTION_HOURS: 168  # 7 days
-      KAFKA_LOG_SEGMENT_BYTES: 1073741824  # 1GB
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824
     networks:
       - kafka-network
     healthcheck:
@@ -55,9 +51,11 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
+    volumes:
+      - kafka-data:/var/lib/kafka/data
 
   # ========================================
-  # KAFKA UI - Web Interface
+  # KAFKA UI
   # ========================================
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -70,15 +68,15 @@ services:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
       KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+      KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL: PLAINTEXT
     networks:
       - kafka-network
 
   # ========================================
-  # KAFKA CONNECT - For Kinesis Integration
+  # KAFKA CONNECT
   # ========================================
   kafka-connect:
     image: confluentinc/cp-kafka-connect:7.5.0
-    hostname: kafka-connect
     container_name: kafka-connect
     depends_on:
       - kafka
@@ -88,32 +86,33 @@ services:
       CONNECT_BOOTSTRAP_SERVERS: 'kafka:29092'
       CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect
       CONNECT_REST_PORT: 8083
-      
-      # Converters
+      CONNECT_GROUP_ID: "connect-cluster"
       CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
       CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
       CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
-      
-      # Internal Topics Configuration
       CONNECT_CONFIG_STORAGE_TOPIC: docker-connect-configs
       CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
       CONNECT_OFFSET_STORAGE_TOPIC: docker-connect-offsets
       CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_PARTITIONS: 1
       CONNECT_STATUS_STORAGE_TOPIC: docker-connect-status
       CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
-      
-      # Plugins (Kinesis Connector - Should be added manually)
       CONNECT_PLUGIN_PATH: "/usr/share/java,/usr/share/confluent-hub-components"
     networks:
       - kafka-network
+    volumes:
+      - "./kinesis-sink.json:/config/kinesis-sink.json"
+      - connect-data:/var/lib/kafka-connect
     command:
-      - bash
-      - -c
-      - |
-        echo "Installing Kinesis Connector..."
-        confluent-hub install --no-prompt confluentinc/kafka-connect-kinesis:latest
-        /etc/confluent/docker/run
+      - /etc/confluent/docker/run
 
 networks:
   kafka-network:
     driver: bridge
+
+volumes:
+  zookeeper-data:
+  zookeeper-log:
+  kafka-data:
+  connect-data:

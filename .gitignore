@@ -49,3 +49,4 @@ logs/
 
 kinesis-sink.json
 .env
+kafka-to-kinesis.py
