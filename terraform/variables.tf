@@ -112,20 +112,20 @@ variable "redshift_base_capacity" {
 # CLOUDWATCH ALARMS (OPTIONAL - Phase 2)
 # =========================================
 
-# variable "alert_email" {
-#   description = "Email for CloudWatch alerts (optional for Phase 1)"
-#   type        = string
-#   default     = ""  # Make it optional
-# }
+variable "alert_email" {
+  description = "Email for CloudWatch alerts (optional for Phase 1)"
+  type        = string
+  default     = ""  # Make it optional
+}
 
-# variable "heart_rate_threshold" {
-#   description = "Heart rate threshold for alerts"
-#   type        = number
-#   default     = 150
-# }
+variable "heart_rate_threshold" {
+  description = "Heart rate threshold for alerts"
+  type        = number
+  default     = 150
+}
 
-# variable "spo2_threshold" {
-#   description = "SpO2 threshold for alerts"
-#   type        = number
-#   default     = 88
-# }
+variable "spo2_threshold" {
+  description = "SpO2 threshold for alerts"
+  type        = number
+  default     = 88
+}

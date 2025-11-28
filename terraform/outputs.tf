@@ -28,15 +28,7 @@ output "firehose_delivery_stream_arn" {
   value       = aws_kinesis_firehose_delivery_stream.medical_to_s3.arn
 }
 
-# output "sns_topic_arn" {
-#   description = "SNS Topic ARN for Alerts"
-#   value       = aws_sns_topic.medical_alerts.arn
-# }
 
-# output "cloudwatch_dashboard_url" {
-#   description = "CloudWatch Dashboard URL"
-#   value       = "https://console.aws.amazon.com/cloudwatch/home?region=${var.aws_region}#dashboards:name=${aws_cloudwatch_dashboard.medical_pipeline.dashboard_name}"
-# }
 
 # =========================================
 # SENSITIVE OUTPUTS (Kafka User Credentials)
@@ -99,8 +91,8 @@ output "redshift_username" {
 }
 
 output "redshift_iam_role_arn" {
-  description = "Redshift IAM Role ARN (for COPY command)"
-  value       = aws_iam_role.redshift_s3_role.arn
+  description = "IAM role ARN that Redshift Serverless uses for COPY"
+  value       = tolist(aws_redshiftserverless_namespace.medical_namespace.iam_roles)[0]
 }
 
 # =========================================
@@ -128,8 +120,7 @@ output "resource_summary" {
     kinesis_stream  = aws_kinesis_stream.medical_stream.name
     s3_bucket       = aws_s3_bucket.medical_data.bucket
     firehose_stream = aws_kinesis_firehose_delivery_stream.medical_to_s3.name
-    # sns_topic       = aws_sns_topic.medical_alerts.name
-    # cloudwatch_logs = aws_cloudwatch_log_group.firehose_logs.name
+    cloudwatch_logs = aws_cloudwatch_log_group.firehose_logs.name
     iam_user        = aws_iam_user.kafka_kinesis_user.name
   }
 }
